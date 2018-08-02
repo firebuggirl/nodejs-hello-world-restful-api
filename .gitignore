@@ -1,0 +1,12 @@
+# Private files
+https/cert.pem
+https/key.pem
+
+# vim files
+.*.sw[a-z]
+*.un~
+Session.vim
+.netrwhist
+
+.DS_Store
+*.log*

@@ -1,50 +1,81 @@
+/*
+ * Primary file for API
+ *
+ */
+
 // Dependencies
-const http = require('http');
+var http = require('http');
+var https = require('https');
 var url = require('url');
-const handlers = require('./lib/handlers');
-const StringDecoder = require('string_decoder').StringDecoder;//Decode a stream of binary data (a buffer object) into a string:
-const config = require('./lib/config');
- // Configure the server to respond to all requests with a string
-const server = http.createServer(function(req,res){
+var StringDecoder = require('string_decoder').StringDecoder;
+var config = require('./lib/config');
+var fs = require('fs');
+var handlers = require('./lib/handlers');
+var helpers = require('./lib/helpers');
+
+ // Instantiate the HTTP server
+var httpServer = http.createServer(function(req,res){
+  unifiedServer(req,res);
+});
+
+// Start the HTTP server
+httpServer.listen(config.httpPort,function(){
+  console.log('The HTTP server is running on port '+config.httpPort);
+});
+
+// Instantiate the HTTPS server
+var httpsServerOptions = {
+  'key': fs.readFileSync('./https/key.pem'),
+  'cert': fs.readFileSync('./https/cert.pem')
+};
+var httpsServer = https.createServer(httpsServerOptions,function(req,res){
+  unifiedServer(req,res);
+});
+
+// Start the HTTPS server
+httpsServer.listen(config.httpsPort,function(){
+ console.log('The HTTPS server is running on port '+config.httpsPort);
+});
+
+// All the server logic for both the http and https server
+var unifiedServer = function(req,res){
 
   // Parse the url
-  const parsedUrl = url.parse(req.url, true);
+  var parsedUrl = url.parse(req.url, true);
 
   // Get the path
-  const path = parsedUrl.pathname;
-  const trimmedPath = path.replace(/^\/+|\/+$/g, '');
+  var path = parsedUrl.pathname;
+  var trimmedPath = path.replace(/^\/+|\/+$/g, '');
 
   // Get the query string as an object
-  const queryStringObject = parsedUrl.query;
+  var queryStringObject = parsedUrl.query;
+
   // Get the HTTP method
-  const method = req.method.toLowerCase();
+  var method = req.method.toLowerCase();
 
   //Get the headers as an object
-  const headers = req.headers;
+  var headers = req.headers;
 
   // Get the payload,if any
-  const decoder = new StringDecoder('utf-8');
-  let buffer = '';
+  var decoder = new StringDecoder('utf-8');
+  var buffer = '';
   req.on('data', function(data) {
       buffer += decoder.write(data);
   });
-
   req.on('end', function() {
       buffer += decoder.end();
 
       // Check the router for a matching path for a handler. If one is not found, use the notFound handler instead.
-      const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
-
+      var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
 
       // Construct the data object to send to the handler
-      let data = {
+      var data = {
         'trimmedPath' : trimmedPath,
         'queryStringObject' : queryStringObject,
         'method' : method,
         'headers' : headers,
-        'payload' : buffer
+        'payload' : helpers.parseJsonToObject(buffer)
       };
-
 
       // Route the request to the handler specified in the router
       chosenHandler(data,function(statusCode,payload){
@@ -56,35 +87,24 @@ const server = http.createServer(function(req,res){
         payload = typeof(payload) == 'object'? payload : {};
 
         // Convert the payload to a string
-        const payloadString = JSON.stringify(payload);
+        var payloadString = JSON.stringify(payload);
+
 
         // Return the response
+        //res.setHeader('Content-Type', 'application/json');
         res.writeHead(statusCode);
-        res.setHeader('Content-Type', 'application/json');
         res.end(payloadString);
-        console.log("Returning this response: ",statusCode,payloadString);
-
+        console.log(trimmedPath,statusCode);
       });
-      // Send the response
-      res.end('Hello! This is a simple Node.js Restful API.\n');
 
-      // Log the request/response
-      console.log('Request received with this payload: ',buffer);
+      res.end('Hello! This is a simple Node.js Restful API.\n');//send response message to Postman when user sends POST request
+      //  console.log('Request received with this payload: ',buffer);//log out POST request
+      console.log('This is a Node.js RESTFUL API');
   });
-
-
-
-  // Log the request/response
-//  console.log('Request received on path: '+trimmedPath+' with method: '+method+' and this query string: ',queryStringObject);
-});
-
-
-
-server.listen(config.port,function(){
-  console.log('The server is up and running on port '+config.port+' in '+config.envName+' mode.');
-});
+};
 
 // Define the request router
-const router = {
+var router = {
+  //'ping' : handlers.ping,
   'hello' : handlers.hello
 };
