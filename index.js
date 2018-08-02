@@ -98,7 +98,7 @@ var unifiedServer = function(req,res){
       });
 
       res.end('Hello! This is a simple Node.js Restful API.\n');//send response message to Postman when user sends POST request
-      //  console.log('Request received with this payload: ',buffer);//log out POST request
+      console.log('Request received with this payload: ',buffer);//log out POST request..return payload
       console.log('This is a Node.js RESTFUL API');
   });
 };
