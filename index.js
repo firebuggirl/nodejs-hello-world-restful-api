@@ -91,7 +91,7 @@ var unifiedServer = function(req,res){
 
 
         // Return the response
-        //res.setHeader('Content-Type', 'application/json');
+        //res.setHeader('Content-Type', 'application/json');//cannot send headers twice....returns error when sending POST req via Postman
         res.writeHead(statusCode);
         res.end(payloadString);
         console.log(trimmedPath,statusCode);
@@ -105,6 +105,6 @@ var unifiedServer = function(req,res){
 
 // Define the request router
 var router = {
-  
+
   'hello' : handlers.hello
 };
