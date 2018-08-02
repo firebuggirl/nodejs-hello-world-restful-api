@@ -4,17 +4,17 @@
  */
 
 // Dependencies
-var http = require('http');
-var https = require('https');
-var url = require('url');
-var StringDecoder = require('string_decoder').StringDecoder;
-var config = require('./lib/config');
-var fs = require('fs');
-var handlers = require('./lib/handlers');
-var helpers = require('./lib/helpers');
+const http = require('http');
+const https = require('https');
+const url = require('url');
+const StringDecoder = require('string_decoder').StringDecoder;
+const config = require('./lib/config');
+const fs = require('fs');
+const handlers = require('./lib/handlers');
+const helpers = require('./lib/helpers');
 
  // Instantiate the HTTP server
-var httpServer = http.createServer(function(req,res){
+const httpServer = http.createServer(function(req,res){
   unifiedServer(req,res);
 });
 
@@ -24,11 +24,11 @@ httpServer.listen(config.httpPort,function(){
 });
 
 // Instantiate the HTTPS server
-var httpsServerOptions = {
+const httpsServerOptions = {
   'key': fs.readFileSync('./https/key.pem'),
   'cert': fs.readFileSync('./https/cert.pem')
 };
-var httpsServer = https.createServer(httpsServerOptions,function(req,res){
+const httpsServer = https.createServer(httpsServerOptions,function(req,res){
   unifiedServer(req,res);
 });
 
@@ -38,27 +38,27 @@ httpsServer.listen(config.httpsPort,function(){
 });
 
 // All the server logic for both the http and https server
-var unifiedServer = function(req,res){
+const unifiedServer = function(req,res){
 
   // Parse the url
-  var parsedUrl = url.parse(req.url, true);
+  const parsedUrl = url.parse(req.url, true);
 
   // Get the path
-  var path = parsedUrl.pathname;
-  var trimmedPath = path.replace(/^\/+|\/+$/g, '');
+  const path = parsedUrl.pathname;
+  const trimmedPath = path.replace(/^\/+|\/+$/g, '');
 
   // Get the query string as an object
-  var queryStringObject = parsedUrl.query;
+  const queryStringObject = parsedUrl.query;
 
   // Get the HTTP method
-  var method = req.method.toLowerCase();
+  const method = req.method.toLowerCase();
 
   //Get the headers as an object
-  var headers = req.headers;
+  const headers = req.headers;
 
   // Get the payload,if any
-  var decoder = new StringDecoder('utf-8');
-  var buffer = '';
+  const decoder = new StringDecoder('utf-8');
+  let buffer = '';
   req.on('data', function(data) {
       buffer += decoder.write(data);
   });
@@ -66,10 +66,10 @@ var unifiedServer = function(req,res){
       buffer += decoder.end();
 
       // Check the router for a matching path for a handler. If one is not found, use the notFound handler instead.
-      var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
+      const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
 
       // Construct the data object to send to the handler
-      var data = {
+      const data = {
         'trimmedPath' : trimmedPath,
         'queryStringObject' : queryStringObject,
         'method' : method,
@@ -87,7 +87,7 @@ var unifiedServer = function(req,res){
         payload = typeof(payload) == 'object'? payload : {};
 
         // Convert the payload to a string
-        var payloadString = JSON.stringify(payload);
+        const payloadString = JSON.stringify(payload);
 
 
         // Return the response
@@ -104,7 +104,7 @@ var unifiedServer = function(req,res){
 };
 
 // Define the request router
-var router = {
+const router = {
 
   'hello' : handlers.hello
 };
